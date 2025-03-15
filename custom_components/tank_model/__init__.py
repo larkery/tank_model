@@ -301,7 +301,7 @@ async def async_setup(hass, config):
 
     await component.async_add_entities([entity])
 
-    async def _update_tank():
+    async def _update_tank(_ignore):
         entity.update()
         await entity.async_update_ha_state()
 
