@@ -264,7 +264,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
         # we don't store heater power
         return {
             "temperatures": [round(temp, 1) for temp in self._model.state],
-            "last_model_update": self._last_update
+            "last_model_update": self._last_update.strftime('%Y-%m-%dT%H:%M:%S')
         }
 
     async def async_added_to_hass(self):
