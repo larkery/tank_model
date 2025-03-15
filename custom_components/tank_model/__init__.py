@@ -235,9 +235,12 @@ class HotWaterTankEntity(RestoreEntity, Entity):
     def update(self):
         now = datetime.now()
         if type(self._last_update) == str:
-            self._last_update = datetime.strptime(
-                self._last_update,
-                '%Y-%m-%dT%H:%M:%S')
+            try: 
+                self._last_update = datetime.strptime(
+                    self._last_update,
+                    '%Y-%m-%dT%H:%M:%S')
+            except:
+                self._last_update = now
         dt = (now - self._last_update).total_seconds()
         self._model.update(dt)
         self._last_update = now
