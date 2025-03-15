@@ -10,6 +10,7 @@ import voluptuous as vol
 from datetime import datetime, timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
@@ -66,7 +67,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_AMBIENT_TEMP, default=DEFAULT_AMBIENT_TEMP): vol.Coerce(float),
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.Coerce(int),
         vol.Optional(CONF_THERMOSTAT, default=DEFAULT_THERMOSTAT): vol.Coerce(float),
-        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_U_VALUE): vol.Coerce(float),
+        vol.Optional(CONF_U_VALUE, default=DEFAULT_U_VALUE): vol.Coerce(float),
         vol.Optional(CONF_USE_TEMP, default=DEFAULT_USE_TEMP): vol.Coerce(float),
         vol.Optional(CONF_HEATER_LAYERS, default=DEFAULT_HEATER_LAYERS): vol.Schema([
             vol.Coerce(int)
@@ -80,7 +81,7 @@ SET_HEATER_POWER_SCHEMA = vol.Schema({
 })
 
 # Schema for drawing water
-DRAW_WATER_SCHEMA = vol.Schema({
+USE_WATER_SCHEMA = vol.Schema({
     vol.Required(ATTR_VOLUME): vol.Coerce(float)
 })
 
@@ -162,7 +163,6 @@ class Tank:
                         new_state[i] = x
                         new_state[i+1] = x
                         out_of_order = True
-                        break
                 else:
                     out_of_order = False
         
@@ -181,7 +181,7 @@ class Tank:
                 # vc * temp - vc * tc = vh * th - vh * temp
                 # vc * (temp - tc) = vh * (th - temp)
                 # vc = [vh * (th - temp)] / (temp - tc)
-                vc = slice_volume * (layer_temp - target_temperature) / (target_temperature - inlet_temperature)
+                vc = slice_volume * (layer_temp - target_temperature) / (target_temperature - self.inlet_temperature)
                 acc += vc + slice_volume
         return acc
         
@@ -267,7 +267,8 @@ class HotWaterTankEntity(RestoreEntity, Entity):
         state = await self.async_get_last_state()
         
         if state:
-            self._model.state = map(float, state.attributes.get('temperatures', _model.state))
+            self._model.state = list(map(float, state.attributes.get('temperatures',
+                                                                     self._model.state)))
             self._last_update = state.attributes.get('last_model_update', datetime.now())
             if type(self._last_update) == str:
                 self._last_update = datetime.strptime(self._last_update,
@@ -284,13 +285,13 @@ async def async_setup(hass, config):
     entity = HotWaterTankEntity(
         config[CONF_NAME],
         config[CONF_LAYERS],
-        config[CONF_DIAMETER]
+        config[CONF_DIAMETER],
         config[CONF_HEIGHT],
         config[CONF_VOLUME],
         config[CONF_INLET_TEMP],
         config[CONF_AMBIENT_TEMP],
         config[CONF_THERMOSTAT],
-        config[CONF_U_VALUE]
+        config[CONF_U_VALUE],
         config[CONF_USE_TEMP],
         config[CONF_HEATER_LAYERS]
     )
@@ -304,7 +305,7 @@ async def async_setup(hass, config):
         await entity.async_update_ha_state()
 
     update_interval = config[CONF_UPDATE_INTERVAL]
-    async_track_time_interval(hass, _update_tank, update_interval)
+    async_track_time_interval(hass, _update_tank, timedelta(seconds=update_interval))
 
     async def async_handle_set_heater_power(call):
         power = call.data.get(ATTR_POWER, 0)
