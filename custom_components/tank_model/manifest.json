@@ -1,0 +1,12 @@
+{
+  "domain": "hot_water_tank",
+  "name": "Hot Water Tank",
+  "codeowners": ["@larkery"],
+  "dependencies": [],
+  "iot_class": "calculated",
+  "requirements": [],
+  "version": "1.0.0",
+  "documentation": "https://github.com/larkery/tank_model",
+  "issue_tracker": "https://github.com/larkery/tank_model/issues",
+  "integration_type":"helper"
+}
