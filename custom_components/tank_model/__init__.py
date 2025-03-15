@@ -62,6 +62,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_LAYERS, default=DEFAULT_LAYERS): cv.positive_int,
         vol.Optional(CONF_DIAMETER, default=DEFAULT_DIAMETER): vol.Coerce(float),
+        vol.Optional(CONF_HEIGHT, default=DEFAULT_HEIGHT): vol.Coerce(float),
         vol.Optional(CONF_VOLUME, default=DEFAULT_VOLUME): vol.Coerce(float),
         vol.Optional(CONF_INLET_TEMP, default=DEFAULT_INLET_TEMP): vol.Coerce(float),
         vol.Optional(CONF_AMBIENT_TEMP, default=DEFAULT_AMBIENT_TEMP): vol.Coerce(float),
