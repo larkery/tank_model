@@ -295,6 +295,10 @@ class HotWaterTankEntity(RestoreEntity, Entity):
     @property
     def state(self):
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        return "L"  # Liters
     
     @property
     def state_attributes(self):
