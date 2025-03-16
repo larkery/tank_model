@@ -221,8 +221,7 @@ class Tank:
                 break
 
         # discard the slices we used all of
-        whole_slices = used_volume // slice_volume
-        _LOGGER.info(f"{used_volume} used which is {whole_slices} slices ")
+        whole_slices = int(used_volume // slice_volume)
         
         # mix the slice we used partially if any
         fill = used_volume % slice_volume
