@@ -225,6 +225,7 @@ class Tank:
         
         # mix the slice we used partially if any
         fill = used_volume % slice_volume
+
         _LOGGER.warning(f"{used_volume} used which is {whole_slices} slices and {fill} left")
 
         new_state = self.state[:n_layers - whole_slices]
