@@ -187,23 +187,52 @@ class Tank:
         return acc
         
 
-    def use_water(self, volume_l):
+    def use_water(self, volume_l, target_temperature):
+        """
+        Update self.state with the new layer temperatures after volume_l
+        liters of water has been produced at target_temperature, by mixing water
+        taken from the top (last element) of the tank with water at the inlet temperature (at the tap).
+
+        The hot water layers in the tank move up as they are used, and are replaced with water at inlet_temperature from the bottom (first) layer.
+
+        If the volume cannot be produced at the target temperature, because the tank does not contain enough hot water, assume that hot water is produced up to volume_l at the highest temperature possible below target_temperature
+        """
         if volume_l <= 0: return
-        if volume_l > self.volume: volume_l = self.volume
 
         n_layers = len(self.state)
         slice_volume = self.volume / n_layers
-        fractional_layers = volume_l / slice_volume
-        integral_layers = int(fractional_layers)
-        fractional_layer = fractional_layers - integral_layers
 
-        cold_layers = [self.inlet_temperature] * integral_layers
-        hot_layers = self.state[:n_layers-integral_layers]
-        if hot_layers:
-            hot_layers[-1] = (self.inlet_temperature * fractional_layer) + (hot_layers[-1] * (1 - fractional_layer))
-        self.state = cold_layers + hot_layers
+        used_volume = 0
         
-        return 0
+        for i in reversed(range(n_layers)):
+            layer_temp = self.state[i]
+            # how much can we make with this layer
+            vc = slice_volume * (layer_temp - target_temperature) / \
+                (target_temperature - self.inlet_temperature) \
+                if layer_temp >= target_temperature else 0
+            vt = vc + slice_volume
+            if volume_l >= vt:
+                volume_l -= vt
+                used_volume += slice_volume
+            else:
+                used_volume += slice_volume * volume_l / vt
+                volume_l = 0
+                break
+
+        # discard the slices we used all of
+        whole_slices = used_volume // slice_volume
+        new_state = self.state[:n_layers - whole_slices]
+        
+        # mix the slice we used partially if any
+        fill = used_volume % slice_volume
+        keep = slice_volume - remainder
+        t_below = self.inlet_temperature
+        for i in range(len(new_state)):
+            t_here = (new_state[i]*keep + t_below * fill) / (keep + fill)
+            t_below = new_state[i]
+            new_state[i] = t_here
+        new_state = ([self.inlet_temperature] * whole_slices) + new_state
+        self.state = new_state
 
 class HotWaterTankEntity(RestoreEntity, Entity):
     def __init__(self,
@@ -218,7 +247,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
                  u_value,
                  use_temp,
                  heater_layers):
-        self.entity_id = f"{DOMAIN}.{name.lower().replace(' ', '_')}"
+        self.entity_id = f"sensor.{name.lower().replace(' ', '_')_available_volume}"
         self._name = name
         self._model = Tank(diameter = diameter,
                            height = height,
