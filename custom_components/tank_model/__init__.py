@@ -160,9 +160,10 @@ class Tank:
             while out_of_order:
                 for i in range(n_layers-1):
                     if new_state[i] > (0.05+new_state[i+1]):
-                        x = (new_state[i] + new_state[i+1]) / 2
-                        new_state[i] = x
-                        new_state[i+1] = x
+                        hi = new_state[i]    - 0.4 * (new_state[i] - new_state[i+1])
+                        lo = new_state[i+1]  + 0.4 * (new_state[i] - new_state[i+1])
+                        new_state[i] = lo
+                        new_state[i+1] = hi
                         out_of_order = True
                 else:
                     out_of_order = False
@@ -225,12 +226,13 @@ class Tank:
         
         # mix the slice we used partially if any
         fill = used_volume % slice_volume
-        keep = slice_volume - remainder
-        t_below = self.inlet_temperature
-        for i in range(len(new_state)):
-            t_here = (new_state[i]*keep + t_below * fill) / (keep + fill)
-            t_below = new_state[i]
-            new_state[i] = t_here
+        if fill > 0:
+           keep = slice_volume - fill
+           t_below = self.inlet_temperature
+           for i in range(len(new_state)):
+               t_here = (new_state[i]*keep + t_below * fill) / (keep + fill)
+               t_below = new_state[i]
+               new_state[i] = t_here
         new_state = ([self.inlet_temperature] * whole_slices) + new_state
         self.state = new_state
 
@@ -247,7 +249,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
                  u_value,
                  use_temp,
                  heater_layers):
-        self.entity_id = f"sensor.{name.lower().replace(' ', '_')_available_volume}"
+        self.entity_id = f"sensor.{name.lower().replace(' ', '_')}_available_volume"
         self._name = name
         self._model = Tank(diameter = diameter,
                            height = height,
@@ -273,14 +275,14 @@ class HotWaterTankEntity(RestoreEntity, Entity):
         dt = (now - self._last_update).total_seconds()
         self._model.update(dt)
         self._last_update = now
-        self._state = self._model.available_volume(self._use_temp)
+        self._state = round(self._model.available_volume(self._use_temp))
 
     def set_heater_power(self, power_kw):
         self._model.heating_power = power_kw * 1000.0
         self.update()
 
     def use_water(self, volume_l):
-        self._model.use_water(volume_l)
+        self._model.use_water(volume_l, self._use_temp)
         self.update()
         
     @property
