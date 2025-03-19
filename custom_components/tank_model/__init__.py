@@ -30,7 +30,7 @@ CONF_UPDATE_INTERVAL = "update_interval"
 CONF_THERMOSTAT = "thermostat"
 CONF_U_VALUE = "u_value"
 CONF_USE_TEMP = "use_temperature"
-CONF_HEATER_LAYERS = "heater_layers"
+CONF_HEATERS = "heaters"
 
 # Service names
 SERVICE_SET_HEATER_POWER = "set_heater_power"
@@ -44,14 +44,14 @@ ATTR_TEMPERATURES = "layer_temperature"
 
 # Configuration defaults
 DEFAULT_NAME = "Hot Water Tank"
-DEFAULT_LAYERS = 10
+DEFAULT_LAYERS = 20
 DEFAULT_DIAMETER = 0.55  # meters
 DEFAULT_HEIGHT = 1.3
 DEFAULT_VOLUME = 180 
 DEFAULT_INLET_TEMP = 15  # Celsius
 DEFAULT_AMBIENT_TEMP = 20  # Celsius
 DEFAULT_UPDATE_INTERVAL = 120  # seconds
-DEFAULT_HEATER_LAYERS = [1, 5]
+DEFAULT_HEATERS = [0.1, 0.6]
 DEFAULT_THERMOSTAT = 60
 DEFAULT_U_VALUE = 0.5
 DEFAULT_USE_TEMP = 45.0
@@ -70,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_THERMOSTAT, default=DEFAULT_THERMOSTAT): vol.Coerce(float),
         vol.Optional(CONF_U_VALUE, default=DEFAULT_U_VALUE): vol.Coerce(float),
         vol.Optional(CONF_USE_TEMP, default=DEFAULT_USE_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_HEATER_LAYERS, default=DEFAULT_HEATER_LAYERS): vol.Schema([
+        vol.Optional(CONF_HEATERS, default=DEFAULT_HEATERS): vol.Schema([
             vol.Coerce(int)
         ])
     })
@@ -251,13 +251,14 @@ class HotWaterTankEntity(RestoreEntity, Entity):
                  thermostat_temp,
                  u_value,
                  use_temp,
-                 heater_layers):
+                 heater_heights):
         self.entity_id = f"sensor.{name.lower().replace(' ', '_')}_available_volume"
         self._name = name
         self._model = Tank(diameter = diameter,
                            height = height,
                            layers = layers,
-                           heater_layers = heater_layers,
+                           heater_layers = [int(layers * h / tank_height)
+                                            for h in heater_heights],
                            u_value = u_value,
                            inlet_temperature = inlet_temp,
                            ambient_temperature = ambient_temp,
@@ -339,7 +340,7 @@ async def async_setup(hass, config):
         config[CONF_THERMOSTAT],
         config[CONF_U_VALUE],
         config[CONF_USE_TEMP],
-        config[CONF_HEATER_LAYERS]
+        config[CONF_HEATERS]
     )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
