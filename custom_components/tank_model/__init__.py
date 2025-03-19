@@ -257,7 +257,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
         self._model = Tank(diameter = diameter,
                            height = height,
                            layers = layers,
-                           heater_layers = [int(layers * h / tank_height)
+                           heater_layers = [int(layers * h / height)
                                             for h in heater_heights],
                            u_value = u_value,
                            inlet_temperature = inlet_temp,
