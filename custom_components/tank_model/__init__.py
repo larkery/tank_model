@@ -373,8 +373,8 @@ async def async_setup(hass, config):
 
             
             entity._model.state = temps
-            entity._model.heater_heights = [int(r * h)
-                                            for h in entity._model.heater_heights]
+            entity._model.heater_layers = [int(r * h)
+                                            for h in entity._model.heater_layers]
             
             entity._last_update = datetime.now()
         await entity.async_update_ha_state()
