@@ -367,7 +367,15 @@ async def async_setup(hass, config):
     async def async_handle_set_state(call):
         temps = call.data.get(ATTR_TEMPERATURES, [])
         if temps:
+            l0 = len(entity._model.state)
+            l1 = len(temps)
+            r = l1/l0
+
+            
             entity._model.state = temps
+            entity._model.heater_heights = [int(r * h)
+                                            for h in entity._model.heater_heights]
+            
             entity._last_update = datetime.now()
         await entity.async_update_ha_state()
 
