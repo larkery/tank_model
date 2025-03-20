@@ -254,6 +254,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
                  heater_heights):
         self.entity_id = f"sensor.{name.lower().replace(' ', '_')}_available_volume"
         self._name = name
+        _LOGGER.warning(f"h: {heater_heights}")
         self._model = Tank(diameter = diameter,
                            height = height,
                            layers = layers,
