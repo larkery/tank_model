@@ -71,7 +71,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_U_VALUE, default=DEFAULT_U_VALUE): vol.Coerce(float),
         vol.Optional(CONF_USE_TEMP, default=DEFAULT_USE_TEMP): vol.Coerce(float),
         vol.Optional(CONF_HEATERS, default=DEFAULT_HEATERS): vol.Schema([
-            vol.Coerce(int)
+            vol.Coerce(float)
         ])
     })
 }, extra=vol.ALLOW_EXTRA)
