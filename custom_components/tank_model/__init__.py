@@ -112,7 +112,7 @@ class Tank:
         self.thermostat = thermostat
         self.heating_power = 0
         self.u_value = u_value
-        self.heating = False
+        self.heating = None
 
     def update(self, time):
         if time <= 0: return
@@ -124,7 +124,7 @@ class Tank:
 
         new_state = self.state.copy()
         slice_volume = self.volume / n_layers
-        self.heating = False
+        self.heating = None
 
         # determine if heater is on - highest heater wins
         heating_layer = None
@@ -145,7 +145,7 @@ class Tank:
                 conduction += 0.6 * (self.state[i+1] - self.state[i])
             if i == heating_layer:
                 heat_in = self.heating_power
-                self.heating = heat_in > 0
+                self.heating = heating_layer if heat_in > 0 else None
             else:
                 heat_in = 0
             power = heat_in + conduction - loss
@@ -159,7 +159,7 @@ class Tank:
             out_of_order = True
             while out_of_order:
                 for i in range(n_layers-1):
-                    if new_state[i] > (0.05+new_state[i+1]):
+                    if new_state[i] > (0.001+new_state[i+1]):
                         hi = new_state[i]    - 0.4 * (new_state[i] - new_state[i+1])
                         lo = new_state[i+1]  + 0.4 * (new_state[i] - new_state[i+1])
                         new_state[i] = lo
@@ -306,7 +306,9 @@ class HotWaterTankEntity(RestoreEntity, Entity):
         # we don't store heater power
         return {
             "temperatures": [round(temp, 1) for temp in self._model.state],
-            "last_model_update": self._last_update.strftime('%Y-%m-%dT%H:%M:%S')
+            "last_model_update": self._last_update.strftime('%Y-%m-%dT%H:%M:%S'),
+            "heater_layers": self._model.heater_layers,
+            "heating_layer": self._model.heating
         }
 
     async def async_added_to_hass(self):
