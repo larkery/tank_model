@@ -153,21 +153,23 @@ class Tank:
             slice_delta_t = energy * 0.00024 / slice_volume
             new_state[i] += slice_delta_t
 
-            # convection. not exactly fluid dynamics this has no time
-            # dimension so probably has something wrong about scaling
-            # in it.
-            out_of_order = True
-            while out_of_order:
-                for i in range(n_layers-1):
-                    if new_state[i] > (0.001+new_state[i+1]):
-                        hi = new_state[i]    - 0.4 * (new_state[i] - new_state[i+1])
-                        lo = new_state[i+1]  + 0.4 * (new_state[i] - new_state[i+1])
-                        new_state[i] = lo
-                        new_state[i+1] = hi
-                        out_of_order = True
-                else:
-                    out_of_order = False
-        
+        # convection. not exactly fluid dynamics this has no time
+        # dimension so probably has something wrong about scaling
+        # in it.
+        out_of_order = True
+        while out_of_order:
+            for i in range(n_layers-1):
+                if new_state[i] > (0.001+new_state[i+1]):
+                    hi = new_state[i]    - 0.4 * (new_state[i] - new_state[i+1])
+                    lo = new_state[i+1]  + 0.4 * (new_state[i] - new_state[i+1])
+                    new_state[i] = lo
+                    new_state[i+1] = hi
+                    out_of_order = True
+            else:
+                out_of_order = False
+
+        new_state = [min(self.thermostat + 5.0, x) for x in new_state]
+                
         self.state = new_state
 
     def available_volume(self, target_temperature):
