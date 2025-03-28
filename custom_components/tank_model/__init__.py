@@ -311,7 +311,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
             "temperatures": [round(temp, 1) for temp in self._model.state],
             "last_model_update": self._last_update.strftime('%Y-%m-%dT%H:%M:%S'),
             "heater_layers": self._model.heater_layers,
-            "heating_layer": self._model.heating
+            "heating_layer": self._model.heating,
             "heating_power": self._model.heating_power
         }
 
