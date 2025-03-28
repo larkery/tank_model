@@ -312,6 +312,7 @@ class HotWaterTankEntity(RestoreEntity, Entity):
             "last_model_update": self._last_update.strftime('%Y-%m-%dT%H:%M:%S'),
             "heater_layers": self._model.heater_layers,
             "heating_layer": self._model.heating
+            "heating_power": self._model.heating_power
         }
 
     async def async_added_to_hass(self):
